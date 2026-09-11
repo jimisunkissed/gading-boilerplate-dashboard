@@ -6,7 +6,7 @@ _Last verified: 2026-09-12, against the actual repo contents._
 
 - **No lint/format config in the repo.** No `.eslintrc*`/`eslint.config.*`, no `.prettierrc*`, no `lint` script in `package.json` (only `dev`/`build`/`start`). Quote style is inconsistent as a result (single quotes in most `lib/` files, double quotes in `app/` and the API templates) — nothing currently enforces one or the other.
 - **Exports**: utilities are arrow-function `const`s (`export const doThing = (...) => {}`), not `function` declarations, across every file in `lib/utils/` and `lib/api/`.
-- **Naming**: camelCase for functions/variables, PascalCase for types (`ImageMetadata`, `WhereClause`, `ApiSuccess<T>`), kebab-case for filenames (`firebase-mongo-api.ts`, `use-mobile.ts`).
+- **Naming**: camelCase for functions/variables, PascalCase for types (`ImageMetadata`, `WhereClause`, `ApiSuccess<T>`), kebab-case for filenames (`firebase-mongo-api.ts`, `use-mobile.ts`). **Exception: any field written to a Firestore/Mongo document must be snake_case** (`created_at`, `updated_at`, `first_name`, ...), never camelCase — see `docs/DATABASE.md`. This applies to the document's on-the-wire field names only; the TypeScript variables/params referencing that data stay camelCase as normal.
 - **Error handling is layer-dependent — check which layer you're in before assuming a pattern:**
   - `lib/api/firebase-mongo-api.ts` (CRUD/array helpers): catch internally, return `{ error: string }`. Exception: `findOneAndUpdateFirestoreMongo` throws and returns `null` for "not found".
   - `lib/api/firebase-mongo-api.ts` (aggregation helpers — `count`/`sum`/`avg`/`max`/`min`): catch internally, return a bare error **string** (not wrapped in `{ error }`) on failure.

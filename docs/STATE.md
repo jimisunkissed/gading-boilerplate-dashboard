@@ -23,10 +23,9 @@ _Last updated: 2026-09-12_
 
 ## Known issues
 
-1. **Env var name mismatch**: `.env.example` has `FIREBASE_MONGODB_URI`; `lib/config/firebase-mongo-config.ts` reads `FIRESTORE_MONGODB_URI`. Following the example file as-is will not connect. (See `docs/ARCHITECTURE.md` / `docs/DATABASE.md`.)
-2. **`useAuthStore.setUser` type mismatch**: it computes a `name` field that isn't declared on `AuthStoreProps['user']` (the type only has `full_name`). See `docs/FUNCTIONS.md`.
-3. **`app/page.tsx` hardcodes colors** (`bg-zinc-50`, `dark:bg-black`, etc.) instead of using the theme tokens the rest of the system is built around — expected to be replaced along with the rest of the starter page, but flagging since it currently contradicts the styling rule in root `CLAUDE.md`.
-4. Response-envelope helpers (`ok`/`fail`/`isErrorResult`) are duplicated between the two example templates rather than shared — fine at 2 files, worth centralizing once real routes multiply.
+1. **`useAuthStore.setUser` type mismatch**: it computes a `name` field that isn't declared on `AuthStoreProps['user']` (the type only has `full_name`). See `docs/FUNCTIONS.md`.
+2. **`app/page.tsx` hardcodes colors** (`bg-zinc-50`, `dark:bg-black`, etc.) instead of using the theme tokens the rest of the system is built around — expected to be replaced along with the rest of the starter page, but flagging since it currently contradicts the styling rule in root `CLAUDE.md`.
+3. Response-envelope helpers (`ok`/`fail`/`isErrorResult`) are duplicated between the two example templates rather than shared — fine at 2 files, worth centralizing once real routes multiply.
 
 ## Open questions for whoever picks this up next
 

@@ -4,7 +4,7 @@ _Last verified: 2026-09-12, against the actual repo contents. Reuse one of these
 
 ## Database — `lib/api/firebase-mongo-api.ts`
 
-The prebuilt database helpers (standing rule: reach for these first; see `docs/DATABASE.md` for filter operators and the document shape they enforce). All take a `collectionName: string` as the first argument. Except where noted, failures are returned as `{ error: string }` rather than thrown.
+The prebuilt database helpers (standing rule: reach for these first; see `docs/DATABASE.md` for filter operators and the document shape they enforce). All take a `collectionName: string` as the first argument. Except where noted, failures are returned as `{ error: string }` rather than thrown. **All document field names — in `docData`, `select`, `WhereClause.field`, `SortBy.field` — must be snake_case**, matching `created_at`/`updated_at` (see `docs/DATABASE.md`).
 
 | Function | Signature | Does |
 |---|---|---|
@@ -12,8 +12,8 @@ The prebuilt database helpers (standing rule: reach for these first; see `docs/D
 | `getMultipleFirestoreByIdMongo` | `(collectionName, docIds, select?) => Promise<DocResult[] \| ErrorResult>` | Batch fetch by id list, max 100. |
 | `getMultipleFirestoreMongo` | `(collectionName, where?, sortBy?, limit?, start?, select?) => Promise<DocResult[] \| ErrorResult>` | List with filtering (`WhereClause[]`), sorting, and cursor pagination (`start` = last sort-field value). `limit` max 100, default 10. |
 | `addSingleFirestoreMongo` | `(collectionName, docData) => Promise<string \| ErrorResult>` | Insert with an internally generated id. Returns the new id. |
-| `setSingleFirestoreMongo` | `(collectionName, docId, docData) => Promise<string \| ErrorResult>` | Upsert by id (create-or-update). Strips any `id`/`createdAt`/`lastUpdatedAt` from `docData` first and re-stamps them. |
-| `setBatchFirestoreMongo` | `(collectionName, docs, persistDate) => Promise<{ ids: string[] } \| ErrorResult>` | Bulk upsert. `persistDate: true` trusts incoming `createdAt`/`lastUpdatedAt` (migrations); `false` stamps them like the single-doc helper. |
+| `setSingleFirestoreMongo` | `(collectionName, docId, docData) => Promise<string \| ErrorResult>` | Upsert by id (create-or-update). Strips any `id`/`created_at`/`updated_at` from `docData` first and re-stamps them. |
+| `setBatchFirestoreMongo` | `(collectionName, docs, persistDate) => Promise<{ ids: string[] } \| ErrorResult>` | Bulk upsert. `persistDate: true` trusts incoming `created_at`/`updated_at` (migrations); `false` stamps them like the single-doc helper. |
 | `incrementFirestoreMongo` | `(collectionName, docId, field, delta = 1) => Promise<string \| ErrorResult>` | Atomic `$inc` on a numeric field (negative `delta` to decrement). |
 | `deleteSingleFirestoreMongo` | `(collectionName, docId) => Promise<string \| ErrorResult>` | Delete by id. |
 | `findOneAndUpdateFirestoreMongo` | `(collectionName, filter, update) => Promise<DocResult \| null>` | Atomic claim-and-update in one round trip (e.g. for locking/claiming a job). **Throws** on connection failure instead of returning `{ error }`; returns `null` if nothing matched. |

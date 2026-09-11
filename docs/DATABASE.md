@@ -4,9 +4,7 @@ _Last verified: 2026-09-12, against the actual repo contents._
 
 ## Connection
 
-`lib/config/firebase-mongo-config.ts` opens a single cached `MongoClient` (survives Next.js dev hot-reload via `global._mongoClientPromise`) against `process.env.FIRESTORE_MONGODB_URI`. A code comment there calls this "a Firestore-compat connection... bound to one database" — i.e. this is MongoDB's wire protocol pointed at a Firestore-compatible backend, not a self-hosted MongoDB. That's consistent with the naming of everything in `lib/api/firebase-mongo-api.ts` (`*FirestoreMongo`) and with there being **no `$lookup`/aggregation-join usage anywhere in the codebase** — joins aren't available, so any two collections that need related data must either denormalize (copy the fields they need onto each other) or be fetched in two round trips and merged in application code.
-
-⚠️ **Env var name mismatch** (see `docs/ARCHITECTURE.md`): `.env.example` defines `FIREBASE_MONGODB_URI`, but the config file reads `FIRESTORE_MONGODB_URI`. Reconcile before connecting to a real database.
+`lib/config/firebase-mongo-config.ts` opens a single cached `MongoClient` (survives Next.js dev hot-reload via `global._mongoClientPromise`) against `process.env.FIRESTORE_MONGODB_URI` (set via `.env.example`). A code comment there calls this "a Firestore-compat connection... bound to one database" — i.e. this is MongoDB's wire protocol pointed at a Firestore-compatible backend, not a self-hosted MongoDB. That's consistent with the naming of everything in `lib/api/firebase-mongo-api.ts` (`*FirestoreMongo`) and with there being **no `$lookup`/aggregation-join usage anywhere in the codebase** — joins aren't available, so any two collections that need related data must either denormalize (copy the fields they need onto each other) or be fetched in two round trips and merged in application code.
 
 `getDatabase()` takes no database-name argument — the target database is encoded in the URI itself. `getDedicatedClient()` exists for one-off scripts/migrations that need a non-pooled connection (`maxPoolSize: 1`).
 
@@ -32,10 +30,14 @@ Every document written through `lib/api/firebase-mongo-api.ts` gets this shape, 
 | Field | Type | Set by |
 |---|---|---|
 | `_id` | `string` | App-generated: `generateFirestoreId()` in `lib/utils/server/firebase-mongo-util.ts` — a random 20-character alphanumeric string, **not** a Mongo `ObjectId`. Returned to callers as `id` (helpers strip `_id` and spread `id: _id.toString()` instead). |
-| `createdAt` | `Date` | Stamped on first write (`addSingleFirestoreMongo`, or `setSingleFirestoreMongo`/`setBatchFirestoreMongo` on insert-via-upsert). Preserved on subsequent updates. |
-| `lastUpdatedAt` | `Date` | Stamped on every write. |
+| `created_at` | `Date` | Stamped on first write (`addSingleFirestoreMongo`, or `setSingleFirestoreMongo`/`setBatchFirestoreMongo` on insert-via-upsert). Preserved on subsequent updates. |
+| `updated_at` | `Date` | Stamped on every write. |
 
-`setBatchFirestoreMongo` has a `persistDate` flag: when `true` it trusts `createdAt`/`lastUpdatedAt` already present on the incoming data (for migrations); when `false`/omitted it stamps them itself the same way the single-document helpers do.
+`setBatchFirestoreMongo` has a `persistDate` flag: when `true` it trusts `created_at`/`updated_at` already present on the incoming data (for migrations); when `false`/omitted it stamps them itself the same way the single-document helpers do.
+
+## Field naming — snake_case only
+
+Every field written to a Firestore/Mongo document must be **snake_case** (`created_at`, `updated_at`, `first_name`, ...), never camelCase. This is enforced by convention in `lib/api/firebase-mongo-api.ts` itself (the timestamp fields were renamed from `createdAt`/`lastUpdatedAt` to `created_at`/`updated_at`) and must be followed by any `docData`/`select`/`WhereClause.field`/`SortBy.field` value a caller passes in — the helpers don't transform casing for you, so a camelCase field name will just silently read/write/filter/sort on a field that doesn't match the rest of the document. TypeScript-side variables and function names stay camelCase as usual (see `docs/STYLEGUIDE.md`); this rule is scoped to document field names only.
 
 ## Filtering
 

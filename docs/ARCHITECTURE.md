@@ -67,6 +67,4 @@ Path alias: `@/*` → repo root (`tsconfig.json`).
 
 ## Known gap
 
-`.env.example` declares `FIREBASE_MONGODB_URI`, but `lib/config/firebase-mongo-config.ts` reads `process.env.FIRESTORE_MONGODB_URI` — the names don't match, so following `.env.example` literally will leave the app unable to connect. Fix one side before wiring up a real database.
-
 Clerk env vars (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `SIGNING_SECRET`) are present in `.env.example` and referenced in a comment in `upload-route.example.ts`, but `@clerk/nextjs` is **not** a dependency in `package.json` and there is no `middleware.ts` — auth is not actually wired up yet, only anticipated.
