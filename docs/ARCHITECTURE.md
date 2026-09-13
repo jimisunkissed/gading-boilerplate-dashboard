@@ -1,6 +1,6 @@
 # Architecture
 
-_Last verified: 2026-09-12, against the actual repo contents._
+_Last verified: 2026-09-14, against the actual repo contents._
 
 ## Stack
 
@@ -16,8 +16,8 @@ _Last verified: 2026-09-12, against the actual repo contents._
 
 App Router only — no `pages/` directory. Currently the tree is minimal:
 
-- `app/layout.tsx` — root layout, wraps `children` in `TooltipProvider` (from `components/ui/tooltip`), loads Geist fonts.
-- `app/page.tsx` — the **unmodified `create-next-app` starter page**. Nothing product-specific has been built yet.
+- `app/layout.tsx` — root layout, wraps `children` in `TooltipProvider` (from `components/ui/tooltip`). Applies the font from `lib/config/fonts.ts` (`googleSans` → `--font-sans`) as an `<html>` class.
+- `app/page.tsx` — a minimal "hello, welcome" intro/landing page for the boilerplate (badge + heading + description + footer credit). Not a dashboard — replace it once real product UI exists.
 - `app/api/_template/` — two **reference templates**, not live routes:
   - `crud-route.example.ts`
   - `upload-route.example.ts`
@@ -33,6 +33,7 @@ No feature code exists yet that draws this line in `app/`, but the convention is
 - `lib/utils/client/*` — browser-only code (canvas, `browser-image-compression`, `@ffmpeg/ffmpeg` wasm). Only usable from Client Components.
 - `lib/utils/server/*` — Node-only code (`sharp`, `fluent-ffmpeg`, `fs`, `os`). Only usable from Route Handlers / Server Components.
 - Every shadcn primitive under `components/ui/` that needs interactivity already declares `"use client"` at the top (most of them — anything Radix/base-ui-driven). `app/page.tsx` and `app/layout.tsx` currently have no `"use client"` and are plain Server Components.
+- **Font module (`lib/config/fonts.ts`)**: `googleSans` lives in its own module rather than being defined inline in `app/layout.tsx`, specifically so portal-rendered `"use client"` components (`dialog`, `sheet`, `drawer`, `alert-dialog`, `toast`, `tooltip` — anything whose content mounts outside the normal DOM subtree via a Portal) can import `googleSans` and apply `googleSans.className` to their content root directly, rather than relying on CSS-variable inheritance from `<html>`. Defining the font in `app/layout.tsx` and importing it back into `components/ui/tooltip.tsx` doesn't work — `app/layout.tsx` renders `TooltipProvider` from that same file, so the cycle pulls the (non-`"use client"`) layout module into the client bundle and breaks its `metadata` export. If a new font is ever added for portal components, put it in `lib/config/fonts.ts`, not in `app/layout.tsx`. (Geist Mono was removed — Google Sans is the only font in this module now; `font-mono` utility classes fall back to Tailwind's default monospace stack since `--font-mono` is no longer overridden in `globals.css`.)
 
 ## API response envelope
 
@@ -55,7 +56,7 @@ components/ui/       shadcn primitives only — no custom composed components ye
 hooks/                use-mobile.ts (useIsMobile)
 lib/
   api/                external-service wrapper functions (Mongo, R2) — see docs/FUNCTIONS.md
-  config/             singleton client construction (Mongo client promise, S3Client)
+  config/             singleton client construction (Mongo client promise, S3Client), fonts.ts (googleSans)
   stores/             zustand stores
   utils/client/        browser-only helpers
   utils/server/        Node-only helpers

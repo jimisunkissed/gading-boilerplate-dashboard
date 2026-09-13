@@ -14,12 +14,22 @@ Next.js 16 (App Router) + MongoDB (Firestore-compatible) + Cloudflare R2 dashboa
 
 Read the relevant doc before touching that area of the code — they're kept current as part of every session (see rule 6 below).
 
+## First clone check
+
+Run `git remote get-url origin` at the start of a session. If it's still `https://github.com/jimisunkissed/gading-boilerplate-dashboard.git`, this is a fresh, unmodified clone of the template (not yet repointed to the user's own project) — before doing anything else, suggest they create a new GitHub repository and repoint `origin` to it, so their work doesn't end up pushed back into the boilerplate. A suggestion, not a gate — proceed with the actual task either way if they decline or want to do it later. Skip this check silently once `origin` points elsewhere.
+
 ## Standing rules
 
 1. **Database access**: default to the helpers in `lib/api/firebase-mongo-api.ts` (16 functions covering CRUD, filtering, pagination, aggregation, array ops — see `docs/FUNCTIONS.md` / `docs/DATABASE.md`). If a specific route genuinely needs something the helpers don't support (e.g. an OR filter, which `buildMongoFilter` can't express), it's fine to write a custom query directly in that one route file — that's a deliberate escape hatch, not a violation. If you find yourself reaching for the escape hatch more than once for the same need, add a helper instead.
 2. **Field naming**: every field written to a Firestore/Mongo document must be **snake_case** (`created_at`, `updated_at`, `first_name`, ...) — never camelCase. This applies to `docData` passed into the database helpers, and to any `field`/`select` value used in a `WhereClause` or `SortBy`. The helpers don't normalize casing, so a camelCase field will silently miss/filter/sort against nothing. TypeScript identifiers (variables, function names) are unaffected and stay camelCase.
 3. **Media uploads**: always go through `lib/api/r2-api.ts` (`uploadFileR2`, `deleteFileR2`, `extractKeyR2`) for anything touching object storage. Never call the S3 SDK directly in a route.
 4. **Other utilities**: before writing inline date/string/number/image/video/file logic, check `docs/FUNCTIONS.md` — there's likely already a helper in `lib/utils/client/` or `lib/utils/server/` (mind the client/server split — see `docs/ARCHITECTURE.md`).
-5. **Styling**: never hardcode a hex/rgb color in component code — always use the CSS variable/theme tokens defined in `app/globals.css` (`bg-background`, `text-foreground`, etc.). This is what keeps a future dark-mode toggle cheap; dark mode itself stays optional for now. (`app/page.tsx` currently violates this — it's leftover scaffolding, not a pattern to follow.)
+5. **Styling**: neutral colors (white/grey/black shades) always use the theme tokens in `app/globals.css` (`bg-background`, `text-foreground`, `border-border`, etc.) — never hardcode those. A hardcoded Tailwind color class is allowed only when the color actually has hue (a brand/accent/semantic color the token system doesn't cover, e.g. `bg-amber-500`, `text-sky-600`) — and only paired with its `dark:` counterpart (e.g. `bg-amber-500 dark:bg-amber-400`) so the UI still looks right the moment a dark-mode toggle exists. Never use a raw hex/rgb literal (`style={{ color: '#...' }}`) — Tailwind palette classes only, so the `dark:` variant stays declarative. (`app/page.tsx` currently violates this — it's leftover scaffolding, not a pattern to follow.)
 6. **Big changes**: before a change that touches many files, or deletes/renames/restructures something load-bearing, suggest committing current work first so it's easy to revert. A suggestion, not a gate.
-7. **End-of-session ritual**, every session: (1) run `npm run build` and resolve anything it flags, (2) update whichever `docs/*.md` files no longer reflect the current code, (3) commit with a clear message.
+7. **Docs stay in sync with code, enforced at commit time**: before any commit that adds/removes/changes a route (`app/**/route.ts`, `app/**/page.tsx`), a page's content/behavior, a `lib/` helper, or a collection shape:
+   - Add or update the route/page in `docs/ARCHITECTURE.md`'s Routing section (path, purpose, what it renders/returns).
+   - Update `docs/STATE.md`'s built/stubbed/known-issues lists to match.
+   - Update `docs/FUNCTIONS.md` / `docs/DATABASE.md` if a helper or collection changed.
+   - Bump the `_Last updated` date on any file you touch.
+
+   Do this in the same commit as the code change, not a follow-up — a commit that changes routing/pages/helpers without a corresponding doc update is incomplete. Also run `npm run build` and resolve anything it flags before committing.

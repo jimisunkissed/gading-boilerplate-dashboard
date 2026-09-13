@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthStoreProps>((set) => ({
       user: {
         ...state.user,
         ...data,
-        name: [data.first_name || state.user.first_name, data.last_name || state.user.last_name].filter(Boolean).join(' '),
+        full_name: [data.first_name || state.user.first_name, data.last_name || state.user.last_name].filter(Boolean).join(' '),
       },
     })),
 }));
