@@ -57,12 +57,16 @@ built via local `ok(data, status?)` / `fail(error, status?)` helpers. This is th
 app/
   api/_template/     example route handlers (inert, copy-and-rename to use)
   api/dev/database/  dev-only index endpoints (create-index, remove-index, check-index)
-  layout.tsx, page.tsx, globals.css
-components/ui/       shadcn primitives only — no custom composed components yet
+  layout.tsx, page.tsx
+  globals.css        router only — imports the files in styles/
+  styles/            tokens.css, theme.css, base.css, utilities/, animations/ — see docs/STYLEGUIDE.md
+components/ui/       shadcn-generated files only — never add custom components here or in components/
 hooks/                use-mobile.ts (useIsMobile)
 lib/
   api/                external-service wrapper functions (Mongo, R2) — see docs/FUNCTIONS.md
+  components/<type>/  general-purpose, multi-page UI components, grouped by type (card/, drawer/, ...) — empty so far
   config/             singleton client construction (Mongo client promise, S3Client), fonts.ts (googleSans)
+  features/<name>/    UI components + narrow-scope functions specific to one feature/route group (customers/, stocks/, ...) — empty so far
   stores/             zustand stores
   utils/client/        browser-only helpers
   utils/server/        Node-only helpers
@@ -71,6 +75,18 @@ public/               default create-next-app SVGs, unused otherwise
 ```
 
 Path alias: `@/*` → repo root (`tsconfig.json`).
+
+### Where new code goes
+
+| What | Where |
+|---|---|
+| UI component reused across multiple pages, general purpose, many use cases | `lib/components/<type>/` — `<type>` is the kind of component (`card`, `drawer`, ...) |
+| UI component specific to one feature (e.g. a customers or stocks route) | `lib/features/<feature-name>/` |
+| Function specific to one feature/route, narrow scope | `lib/features/<feature-name>/` (alongside that feature's components) |
+| General-purpose utility (string, number, date, image, video, file, ...) | The existing files in `lib/utils/client/` / `lib/utils/server/` — see `docs/FUNCTIONS.md`. Don't create a new util file if a matching one exists. |
+| shadcn primitives | `components/ui/` — reserved for shadcn-generated files. Custom components (including wrappers/compositions of shadcn primitives) never go in `components/` or `components/ui/`. |
+
+Promotion rule: start a component in `lib/features/<name>/`; move it to `lib/components/<type>/` once a second feature needs it.
 
 ## Known gap
 

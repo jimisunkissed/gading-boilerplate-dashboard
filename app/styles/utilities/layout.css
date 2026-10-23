@@ -1,0 +1,33 @@
+@utility page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: fit-content;
+}
+
+@utility bleedx-* {
+  margin-inline: calc(--value(--spacing-*) * -1);
+  padding-inline: --value(--spacing-*);
+}
+@utility bleedy-* {
+  margin-block: calc(--value(--spacing-*) * -1);
+  padding-block: --value(--spacing-*);
+}
+@utility bleed-* {
+  margin: calc(--value(--spacing-*) * -1);
+  padding: --value(--spacing-*);
+}
+
+/* bare versions default to the rmd scale */
+@utility bleedx {
+  margin-inline: calc(var(--spacing-rmd) * -1);
+  padding-inline: var(--spacing-rmd);
+}
+@utility bleedy {
+  margin-block: calc(var(--spacing-rmd) * -1);
+  padding-block: var(--spacing-rmd);
+}
+@utility bleed {
+  margin: calc(var(--spacing-rmd) * -1);
+  padding: var(--spacing-rmd);
+}

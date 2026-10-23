@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "gading-boilerplate-dashboard",
+  title: "My Dashboard",
   description: "Next.js + MongoDB + Cloudflare R2 dashboard boilerplate.",
 };
 

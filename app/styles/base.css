@@ -1,0 +1,21 @@
+@custom-variant dark (&:is(.dark, .dark *));
+
+html,
+body {
+  @apply bg-white dark:bg-black;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  ::selection {
+    @apply bg-orange-100 text-orange-900;
+  }
+  ::-moz-selection {
+    @apply bg-orange-100 text-orange-900;
+  }
+}
