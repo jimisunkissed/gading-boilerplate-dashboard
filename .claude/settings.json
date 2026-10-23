@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run --silent db:check-index",
+            "asyncRewake": true,
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

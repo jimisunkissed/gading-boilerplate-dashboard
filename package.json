@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "db:check-index": "tsx --env-file-if-exists=.env.local scripts/check-index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.879.0",
@@ -23,14 +24,14 @@
     "input-otp": "^1.5.0",
     "lucide-react": "^1.45.0",
     "mongodb": "^6.12.0",
-    "next": "16.3.4",
+    "next": "^16.4.2",
     "react": "19.2.8",
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.8",
     "react-resizable-panels": "^4.12.4",
     "recharts": "^3.8.0",
-    "shadcn": "^4.21.0",
-    "sharp": "^0.34.3",
+    "shadcn": "^4.22.1",
+    "sharp": "^0.35.5",
     "tw-animate-css": "^1.4.0",
     "zustand": "^5.0.7"
   },
@@ -42,6 +43,7 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

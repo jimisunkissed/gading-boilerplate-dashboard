@@ -98,3 +98,13 @@ export function toMongoDate(value: any): Date | null {
   const parsed = new Date(value);
   return isNaN(parsed.getTime()) ? null : parsed;
 }
+
+// Index key pattern, e.g. { status: 1, created_at: -1 }. Field names are snake_case document fields.
+export type IndexKey = Record<string, 1 | -1>;
+
+// Same format the driver uses by default ("status_1_created_at_-1"), so an index created without an explicit name
+// can still be matched or dropped by the name derived from its key.
+export const getIndexName = (key: IndexKey): string =>
+  Object.entries(key)
+    .map(([field, direction]) => `${field}_${direction}`)
+    .join('_');

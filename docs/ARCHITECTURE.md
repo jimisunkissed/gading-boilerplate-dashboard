@@ -1,6 +1,6 @@
 # Architecture
 
-_Last verified: 2026-09-14, against the actual repo contents._
+_Last verified: 2026-10-23, against the actual repo contents._
 
 ## Stack
 
@@ -18,6 +18,11 @@ App Router only — no `pages/` directory. Currently the tree is minimal:
 
 - `app/layout.tsx` — root layout, wraps `children` in `TooltipProvider` (from `components/ui/tooltip`). Applies the font from `lib/config/fonts.ts` (`googleSans` → `--font-sans`) as an `<html>` class.
 - `app/page.tsx` — a minimal "hello, welcome" intro/landing page for the boilerplate (badge + heading + description + footer credit). Not a dashboard — replace it once real product UI exists.
+- `app/api/dev/database/` — three **live, dev-only** index endpoints (all return 404 when `NODE_ENV === 'production'`; registry in `lib/config/database-indexes.ts`, logic in `lib/api/database-index-api.ts`). See "Indexes" in `docs/DATABASE.md`:
+  - `create-index/route.ts` — `POST` (body: optional `dryRun`, `collections`). Requests the `PENDING_INDEXES`, one every 30s via `after()`; returns immediately, progress in the server console.
+  - `remove-index/route.ts` — `POST` (same body). Drops the `REMOVE_INDEXES`, outcomes in the response.
+  - `check-index/route.ts` — `GET` (`?explain=true` optional). Compares the registry with `listIndexes` per collection.
+- `scripts/check-index.ts` — standalone version of `check-index` (`npm run db:check-index`), run in the background by the `SessionStart` hook in `.claude/settings.json`.
 - `app/api/_template/` — two **reference templates**, not live routes:
   - `crud-route.example.ts`
   - `upload-route.example.ts`
@@ -51,6 +56,7 @@ built via local `ok(data, status?)` / `fail(error, status?)` helpers. This is th
 ```
 app/
   api/_template/     example route handlers (inert, copy-and-rename to use)
+  api/dev/database/  dev-only index endpoints (create-index, remove-index, check-index)
   layout.tsx, page.tsx, globals.css
 components/ui/       shadcn primitives only — no custom composed components yet
 hooks/                use-mobile.ts (useIsMobile)

@@ -1,6 +1,6 @@
 # Functions reference
 
-_Last verified: 2026-09-12, against the actual repo contents. Reuse one of these before writing new inline logic that duplicates what's already here._
+_Last verified: 2026-10-23, against the actual repo contents. Reuse one of these before writing new inline logic that duplicates what's already here._
 
 ## Database — `lib/api/firebase-mongo-api.ts`
 
@@ -25,6 +25,11 @@ The prebuilt database helpers (standing rule: reach for these first; see `docs/D
 | `arrayUnionFirestoreMongo` | `(collectionName, docId, fieldName, elements) => Promise<string \| ErrorResult>` | `$addToSet` — append value(s) to an array field without duplicates. Upserts if the doc doesn't exist. |
 | `arrayRemoveFirestoreMongo` | `(collectionName, docId, fieldName, elements) => Promise<string \| ErrorResult>` | `$pull` — remove matching value(s) from an array field. |
 
+| `createIndexFirestoreMongo` | `(collectionName, key: IndexKey) => Promise<string \| ErrorResult>` | `createIndex` named with `getIndexName(key)`. One index per call; see `docs/DATABASE.md` for backend limits. |
+| `dropIndexFirestoreMongo` | `(collectionName, indexName) => Promise<string \| ErrorResult>` | `dropIndex` by name. |
+| `listIndexesFirestoreMongo` | `(collectionName) => Promise<IndexInfo[] \| ErrorResult>` | `listIndexes` as `{ name, key }[]`; a collection that doesn't exist lists as `[]`. |
+| `explainFirestoreMongo` | `(collectionName, filter?, sort?) => Promise<Document \| ErrorResult>` | `find().sort().explain('executionStats')`, returned untouched. |
+
 Note the inconsistency: the five aggregation functions (`count`/`sum`/`avg`/`max`/`min`) return a bare error **string** on failure, while every CRUD/array helper returns `{ error: string }`. Callers need `isErrorResult()`-style checks for CRUD calls, but a plain `typeof result === 'string'` check for the aggregation calls.
 
 ## Database — supporting types/helpers — `lib/utils/server/firebase-mongo-util.ts`
@@ -36,7 +41,20 @@ Note the inconsistency: the five aggregation functions (`count`/`sum`/`avg`/`max
 | `buildProjection` | `(select?: string[]) => Record<string,1> \| undefined` | Turns a field list into a Mongo projection. |
 | `buildMongoFilter` | `(whereClause: WhereClause[]) => Filter<Document>` | Turns `WhereClause[]` into a Mongo filter. AND-only across clauses. |
 | `generateFirestoreId` | `(length = 20) => string` | Random alphanumeric id, used for every document `_id`. |
+| `IndexKey` (type) | `Record<string, 1 \| -1>` | Index key pattern, e.g. `{ status: 1, created_at: -1 }`. |
+| `getIndexName` | `(key: IndexKey) => string` | The driver's default index name format (`status_1_created_at_-1`). |
 | `toMongoDate` | `(value: any) => Date \| null` | Coerces `Date`, Firestore Timestamp-like objects (`{_seconds}`/`{seconds}`/`.toDate()`), or parseable strings into a `Date`. |
+
+## Database indexes — `lib/api/database-index-api.ts`
+
+Orchestration behind the dev endpoints in `docs/DATABASE.md`; registry types and data live in `lib/config/database-indexes.ts` (`PENDING_INDEXES`, `CREATED_INDEXES`, `REMOVE_INDEXES`). Dev-route response helpers (`ok`, `fail`, `devOnlyGuard`) are in `lib/utils/server/dev-route-util.ts`.
+
+| Export | Signature | Does |
+|---|---|---|
+| `planIndexes` | `(registry, collections?) => IndexQueueItem[] \| { error }` | Flattens a registry into a queue; errors on unknown collection names. |
+| `createIndexesStaggered` | `(queue) => Promise<void>` | Fires one `createIndexFirestoreMongo` every `INDEX_STAGGER_MS` (30s) without awaiting each; logs outcomes only. |
+| `dropIndexes` | `(queue) => Promise<DropOutcome[]>` | Sequential drops; an already-missing index counts as dropped. |
+| `checkIndexes` | `({ explain? }) => Promise<IndexCheck>` | Per-collection `ready` / `pending_missing` / `missing` / `to_remove_still_present` / `unregistered` (+ `explain`). |
 
 ## Storage — `lib/api/r2-api.ts`
 

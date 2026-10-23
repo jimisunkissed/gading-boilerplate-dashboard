@@ -3,6 +3,8 @@ import {
   buildMongoFilter,
   buildProjection,
   generateFirestoreId,
+  getIndexName,
+  IndexKey,
   SortBy,
   toMongoDate,
   WhereClause,
@@ -393,6 +395,61 @@ export const arrayRemoveFirestoreMongo = async (
     );
 
     return docId;
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+// ============================================================================
+// INDEXES
+// Backend limits (one index per request, no partial/wildcard/hashed, no $indexStats) are in docs/DATABASE.md.
+// ============================================================================
+
+export type IndexInfo = { name: string; key: IndexKey };
+
+export const createIndexFirestoreMongo = async (collectionName: string, key: IndexKey): Promise<string | ErrorResult> => {
+  try {
+    const db = await getDatabase();
+    // explicit name = the driver's default format, so dropIndexFirestoreMongo(getIndexName(key)) always finds it
+    return await db.collection(collectionName).createIndex(key, { name: getIndexName(key) });
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+export const dropIndexFirestoreMongo = async (collectionName: string, indexName: string): Promise<string | ErrorResult> => {
+  try {
+    const db = await getDatabase();
+    await db.collection(collectionName).dropIndex(indexName);
+    return indexName;
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+// A collection that doesn't exist yet has no indexes, so it lists as [] instead of erroring.
+export const listIndexesFirestoreMongo = async (collectionName: string): Promise<IndexInfo[] | ErrorResult> => {
+  try {
+    const db = await getDatabase();
+    const indexes = await db.collection(collectionName).listIndexes().toArray();
+    return indexes.map(({ name, key }) => ({ name: name as string, key: key as IndexKey }));
+  } catch (error) {
+    if ((error as { code?: number }).code === 26) return [];
+    return { error: (error as Error).message };
+  }
+};
+
+// executionStats-level explain for one find(). The output shape is the backend's own and is returned untouched.
+export const explainFirestoreMongo = async (
+  collectionName: string,
+  filter: Filter<Document> = {},
+  sort?: IndexKey
+): Promise<Document | ErrorResult> => {
+  try {
+    const db = await getDatabase();
+    let query = db.collection(collectionName).find(filter);
+    if (sort) query = query.sort(sort);
+    return await query.explain('executionStats');
   } catch (error) {
     return { error: (error as Error).message };
   }
